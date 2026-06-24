@@ -1,17 +1,16 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AI;
 using UnityEngine.Importer;
 
 namespace USDGameReady
 {
-    [NodeMetadata("CreateNavMeshAgentNode", 0)]
-    public class CreateNavMeshAgentNode : Node<CreateNavMeshAgentNode.InputPort, CreateNavMeshAgentNode.OutputPort>
+    [NodeMetadata("CreatePlayerControllerNode", 0)]
+    public class CreatePlayerControllerNode : Node<CreatePlayerControllerNode.InputPort, CreatePlayerControllerNode.OutputPort>
     {
         public class InputPort : InputPorts
         {
             public Dictionary<string, GameObject> gameObjects;
-            public HashSet<string> npcPrimPaths;
+            public HashSet<string> playerPrimPaths;
             public bool enabled = true;
             public ComponentTypeRef componentType;
         }
@@ -25,12 +24,12 @@ namespace USDGameReady
         {
             Output.gameObjects = Input.gameObjects;
 
-            if (!Input.enabled || Input.npcPrimPaths == null || Input.gameObjects == null)
+            if (!Input.enabled || Input.playerPrimPaths == null || Input.gameObjects == null)
                 return;
 
             var customType = Input.componentType?.Resolve();
 
-            foreach (var path in Input.npcPrimPaths)
+            foreach (var path in Input.playerPrimPaths)
             {
                 if (!Input.gameObjects.TryGetValue(path, out var go))
                     continue;
@@ -38,7 +37,7 @@ namespace USDGameReady
                 if (customType != null)
                     go.AddComponent(customType);
                 else
-                    go.AddComponent<NavMeshAgent>();
+                    go.AddComponent<CharacterController>();
             }
         }
     }

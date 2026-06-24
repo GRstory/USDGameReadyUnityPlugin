@@ -31,10 +31,12 @@ namespace USDGameReady.Editor
 
             var graph = Object.Instantiate(sourceGraph);
 
-            var filterNPCNode      = new FilterNPCPrimsNode();
-            var createAgentNode    = new CreateNavMeshAgentNode();
-            var filterColliderNode = new FilterColliderPrimsNode();
-            var createColliderNode = new CreateColliderNode();
+            var filterNPCNode       = new FilterNPCPrimsNode();
+            var createAgentNode     = new CreateNavMeshAgentNode();
+            var filterPlayerNode    = new FilterPlayerPrimsNode();
+            var createPlayerNode    = new CreatePlayerControllerNode();
+            var filterColliderNode  = new FilterColliderPrimsNode();
+            var createColliderNode  = new CreateColliderNode();
 
             var buildHierarchyNode = graph.Nodes.OfType<BuildHierarchyNode>().FirstOrDefault();
             if (buildHierarchyNode == null)
@@ -66,6 +68,8 @@ namespace USDGameReady.Editor
 
             graph.AddNode(filterNPCNode);
             graph.AddNode(createAgentNode);
+            graph.AddNode(filterPlayerNode);
+            graph.AddNode(createPlayerNode);
             graph.AddNode(filterColliderNode);
             graph.AddNode(createColliderNode);
 
@@ -81,8 +85,22 @@ namespace USDGameReady.Editor
                 filterNPCNode,  nameof(FilterNPCPrimsNode.Output.npcPrimPaths),
                 createAgentNode, nameof(CreateNavMeshAgentNode.Input.npcPrimPaths)));
 
+            // NavMeshAgent → Player chain
             graph.AddEdge(new Edge(
-                createAgentNode,    nameof(CreateNavMeshAgentNode.Output.gameObjects),
+                createAgentNode,  nameof(CreateNavMeshAgentNode.Output.gameObjects),
+                createPlayerNode, nameof(CreatePlayerControllerNode.Input.gameObjects)));
+
+            graph.AddEdge(new Edge(
+                stageOpenNode,    nameof(UsdStageOpenNode.Output.stage),
+                filterPlayerNode, nameof(FilterPlayerPrimsNode.Input.stage)));
+
+            graph.AddEdge(new Edge(
+                filterPlayerNode, nameof(FilterPlayerPrimsNode.Output.playerPrimPaths),
+                createPlayerNode, nameof(CreatePlayerControllerNode.Input.playerPrimPaths)));
+
+            // Player → Collider chain
+            graph.AddEdge(new Edge(
+                createPlayerNode,   nameof(CreatePlayerControllerNode.Output.gameObjects),
                 createColliderNode, nameof(CreateColliderNode.Input.gameObjects)));
 
             graph.AddEdge(new Edge(
@@ -94,8 +112,36 @@ namespace USDGameReady.Editor
                 createColliderNode, nameof(CreateColliderNode.Input.colliderPrimPaths)));
 
             graph.AddEdge(new Edge(
+                filterColliderNode, nameof(FilterColliderPrimsNode.Output.colliderSizes),
+                createColliderNode, nameof(CreateColliderNode.Input.colliderSizes)));
+
+            graph.AddEdge(new Edge(
+                filterColliderNode, nameof(FilterColliderPrimsNode.Output.triggerPaths),
+                createColliderNode, nameof(CreateColliderNode.Input.triggerPaths)));
+
+            graph.AddEdge(new Edge(
                 createColliderNode, nameof(CreateColliderNode.Output.gameObjects),
                 buildHierarchyNode, nameof(BuildHierarchyNode.Input.gameObjects)));
+
+            // ImportSettings (Inspector에 표시됨)
+            graph.AddImportSetting(new ImportSetting<bool>(USDGameReadyImportSettings.EnableNPC, true));
+            graph.AddImportSetting(new ImportSetting<bool>(USDGameReadyImportSettings.EnablePlayer, true));
+            graph.AddImportSetting(new ImportSetting<bool>(USDGameReadyImportSettings.EnableCollider, true));
+            graph.AddImportSetting(new ImportSetting<ComponentTypeRef>(USDGameReadyImportSettings.NPCComponent, new ComponentTypeRef()));
+            graph.AddImportSetting(new ImportSetting<ComponentTypeRef>(USDGameReadyImportSettings.PlayerComponent, new ComponentTypeRef()));
+
+            graph.AddSettingEdge(new SettingEdge(USDGameReadyImportSettings.EnableNPC,
+                createAgentNode, nameof(CreateNavMeshAgentNode.Input.enabled)));
+            graph.AddSettingEdge(new SettingEdge(USDGameReadyImportSettings.NPCComponent,
+                createAgentNode, nameof(CreateNavMeshAgentNode.Input.componentType)));
+
+            graph.AddSettingEdge(new SettingEdge(USDGameReadyImportSettings.EnablePlayer,
+                createPlayerNode, nameof(CreatePlayerControllerNode.Input.enabled)));
+            graph.AddSettingEdge(new SettingEdge(USDGameReadyImportSettings.PlayerComponent,
+                createPlayerNode, nameof(CreatePlayerControllerNode.Input.componentType)));
+
+            graph.AddSettingEdge(new SettingEdge(USDGameReadyImportSettings.EnableCollider,
+                createColliderNode, nameof(CreateColliderNode.Input.enabled)));
 
             System.IO.Directory.CreateDirectory(k_OutputDir);
             AssetDatabase.CreateAsset(graph, k_OutputGraphPath);

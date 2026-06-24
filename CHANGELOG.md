@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.1] - 2026-06-24
+
+### Added
+- `gameReady:isPlayer`, `gameReady:colliderSize`, `gameReady:isTrigger` attribute 지원
+- 커스텀 옵션 기능 추가
+
 ## [0.1.0] - 2026-06-23
 
 ### Added
