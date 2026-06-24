@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.2] - 2026-06-24
+
+### Added
+- `gameReady:slopeAngleLimit`, `gameReady:stepHeight`, `gameReady:hasAudioSource` attribute 지원
+- CharacterController 부착 시 Collider 자동 생략 및 colliderSize로 capsule 설정
+
 ## [0.1.1] - 2026-06-24
 
 ### Added

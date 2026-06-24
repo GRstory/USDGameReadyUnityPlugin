@@ -12,6 +12,7 @@ namespace USDGameReady
         {
             public Dictionary<string, GameObject> gameObjects;
             public HashSet<string> npcPrimPaths;
+            public Dictionary<string, Vector3> colliderSizes;
             public bool enabled = true;
             public ComponentTypeRef componentType;
         }
@@ -19,6 +20,7 @@ namespace USDGameReady
         public class OutputPort : OutputPorts
         {
             public Dictionary<string, GameObject> gameObjects;
+            public HashSet<string> navMeshAgentPaths = new();
         }
 
         public override void Run()
@@ -36,9 +38,20 @@ namespace USDGameReady
                     continue;
 
                 if (customType != null)
+                {
                     go.AddComponent(customType);
+                }
                 else
-                    go.AddComponent<NavMeshAgent>();
+                {
+                    var agent = go.AddComponent<NavMeshAgent>();
+                    Output.navMeshAgentPaths.Add(path);
+
+                    if (Input.colliderSizes != null && Input.colliderSizes.TryGetValue(path, out var sz))
+                    {
+                        agent.radius = sz.x;
+                        agent.height = sz.z;
+                    }
+                }
             }
         }
     }

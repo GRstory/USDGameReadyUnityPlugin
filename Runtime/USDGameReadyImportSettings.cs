@@ -4,8 +4,9 @@ namespace USDGameReady
     {
         public const string EnableNPC       = "GR-Enable NPC";
         public const string EnablePlayer    = "GR-Enable Player";
-        public const string EnableCollider  = "GR-Enable Collider";
-        public const string NPCComponent    = "GR-NPC Component";
-        public const string PlayerComponent = "GR-Player Component";
+        public const string EnableCollider    = "GR-Enable Collider";
+        public const string EnableAudioSource = "GR-Enable AudioSource";
+        public const string NPCComponent      = "GR-NPC Component";
+        public const string PlayerComponent   = "GR-Player Component";
     }
 }

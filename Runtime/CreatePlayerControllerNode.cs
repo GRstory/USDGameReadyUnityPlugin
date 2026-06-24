@@ -11,6 +11,9 @@ namespace USDGameReady
         {
             public Dictionary<string, GameObject> gameObjects;
             public HashSet<string> playerPrimPaths;
+            public Dictionary<string, Vector3> colliderSizes;
+            public Dictionary<string, float> slopeAngleLimits;
+            public Dictionary<string, float> stepHeights;
             public bool enabled = true;
             public ComponentTypeRef componentType;
         }
@@ -18,6 +21,7 @@ namespace USDGameReady
         public class OutputPort : OutputPorts
         {
             public Dictionary<string, GameObject> gameObjects;
+            public HashSet<string> characterControllerPaths = new();
         }
 
         public override void Run()
@@ -35,9 +39,24 @@ namespace USDGameReady
                     continue;
 
                 if (customType != null)
+                {
                     go.AddComponent(customType);
+                }
                 else
-                    go.AddComponent<CharacterController>();
+                {
+                    var cc = go.AddComponent<CharacterController>();
+                    Output.characterControllerPaths.Add(path);
+
+                    if (Input.colliderSizes != null && Input.colliderSizes.TryGetValue(path, out var sz))
+                    {
+                        cc.radius = sz.x;
+                        cc.height = sz.z;
+                    }
+                    if (Input.slopeAngleLimits != null && Input.slopeAngleLimits.TryGetValue(path, out var slope))
+                        cc.slopeLimit = slope;
+                    if (Input.stepHeights != null && Input.stepHeights.TryGetValue(path, out var step))
+                        cc.stepOffset = step;
+                }
             }
         }
     }

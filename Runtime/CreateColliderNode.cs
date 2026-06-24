@@ -13,6 +13,7 @@ namespace USDGameReady
             public Dictionary<string, string> colliderPrimPaths;
             public Dictionary<string, Vector3> colliderSizes;
             public HashSet<string> triggerPaths;
+            public HashSet<string> characterControllerPaths;
             public bool enabled = true;
         }
 
@@ -30,6 +31,9 @@ namespace USDGameReady
 
             foreach (var kvp in Input.colliderPrimPaths)
             {
+                if (Input.characterControllerPaths != null && Input.characterControllerPaths.Contains(kvp.Key))
+                    continue;
+
                 if (!Input.gameObjects.TryGetValue(kvp.Key, out var go))
                     continue;
 

@@ -31,12 +31,14 @@ namespace USDGameReady.Editor
 
             var graph = Object.Instantiate(sourceGraph);
 
-            var filterNPCNode       = new FilterNPCPrimsNode();
-            var createAgentNode     = new CreateNavMeshAgentNode();
-            var filterPlayerNode    = new FilterPlayerPrimsNode();
-            var createPlayerNode    = new CreatePlayerControllerNode();
-            var filterColliderNode  = new FilterColliderPrimsNode();
-            var createColliderNode  = new CreateColliderNode();
+            var filterNPCNode         = new FilterNPCPrimsNode();
+            var createAgentNode       = new CreateNavMeshAgentNode();
+            var filterPlayerNode      = new FilterPlayerPrimsNode();
+            var createPlayerNode      = new CreatePlayerControllerNode();
+            var filterColliderNode    = new FilterColliderPrimsNode();
+            var createColliderNode    = new CreateColliderNode();
+            var filterAudioSourceNode = new FilterAudioSourcePrimsNode();
+            var createAudioSourceNode = new CreateAudioSourceNode();
 
             var buildHierarchyNode = graph.Nodes.OfType<BuildHierarchyNode>().FirstOrDefault();
             if (buildHierarchyNode == null)
@@ -72,6 +74,8 @@ namespace USDGameReady.Editor
             graph.AddNode(createPlayerNode);
             graph.AddNode(filterColliderNode);
             graph.AddNode(createColliderNode);
+            graph.AddNode(filterAudioSourceNode);
+            graph.AddNode(createAudioSourceNode);
 
             graph.AddEdge(new Edge(
                 stageOpenNode,  nameof(UsdStageOpenNode.Output.stage),
@@ -85,6 +89,10 @@ namespace USDGameReady.Editor
                 filterNPCNode,  nameof(FilterNPCPrimsNode.Output.npcPrimPaths),
                 createAgentNode, nameof(CreateNavMeshAgentNode.Input.npcPrimPaths)));
 
+            graph.AddEdge(new Edge(
+                filterColliderNode, nameof(FilterColliderPrimsNode.Output.colliderSizes),
+                createAgentNode,    nameof(CreateNavMeshAgentNode.Input.colliderSizes)));
+
             // NavMeshAgent → Player chain
             graph.AddEdge(new Edge(
                 createAgentNode,  nameof(CreateNavMeshAgentNode.Output.gameObjects),
@@ -97,6 +105,18 @@ namespace USDGameReady.Editor
             graph.AddEdge(new Edge(
                 filterPlayerNode, nameof(FilterPlayerPrimsNode.Output.playerPrimPaths),
                 createPlayerNode, nameof(CreatePlayerControllerNode.Input.playerPrimPaths)));
+
+            graph.AddEdge(new Edge(
+                filterPlayerNode, nameof(FilterPlayerPrimsNode.Output.slopeAngleLimits),
+                createPlayerNode, nameof(CreatePlayerControllerNode.Input.slopeAngleLimits)));
+
+            graph.AddEdge(new Edge(
+                filterPlayerNode, nameof(FilterPlayerPrimsNode.Output.stepHeights),
+                createPlayerNode, nameof(CreatePlayerControllerNode.Input.stepHeights)));
+
+            graph.AddEdge(new Edge(
+                filterColliderNode, nameof(FilterColliderPrimsNode.Output.colliderSizes),
+                createPlayerNode,   nameof(CreatePlayerControllerNode.Input.colliderSizes)));
 
             // Player → Collider chain
             graph.AddEdge(new Edge(
@@ -120,13 +140,31 @@ namespace USDGameReady.Editor
                 createColliderNode, nameof(CreateColliderNode.Input.triggerPaths)));
 
             graph.AddEdge(new Edge(
-                createColliderNode, nameof(CreateColliderNode.Output.gameObjects),
-                buildHierarchyNode, nameof(BuildHierarchyNode.Input.gameObjects)));
+                createPlayerNode,   nameof(CreatePlayerControllerNode.Output.characterControllerPaths),
+                createColliderNode, nameof(CreateColliderNode.Input.characterControllerPaths)));
+
+            // Collider → AudioSource → BuildHierarchy
+            graph.AddEdge(new Edge(
+                createColliderNode,    nameof(CreateColliderNode.Output.gameObjects),
+                createAudioSourceNode, nameof(CreateAudioSourceNode.Input.gameObjects)));
+
+            graph.AddEdge(new Edge(
+                stageOpenNode,         nameof(UsdStageOpenNode.Output.stage),
+                filterAudioSourceNode, nameof(FilterAudioSourcePrimsNode.Input.stage)));
+
+            graph.AddEdge(new Edge(
+                filterAudioSourceNode, nameof(FilterAudioSourcePrimsNode.Output.audioSourcePaths),
+                createAudioSourceNode, nameof(CreateAudioSourceNode.Input.audioSourcePaths)));
+
+            graph.AddEdge(new Edge(
+                createAudioSourceNode, nameof(CreateAudioSourceNode.Output.gameObjects),
+                buildHierarchyNode,    nameof(BuildHierarchyNode.Input.gameObjects)));
 
             // ImportSettings (Inspector에 표시됨)
             graph.AddImportSetting(new ImportSetting<bool>(USDGameReadyImportSettings.EnableNPC, true));
             graph.AddImportSetting(new ImportSetting<bool>(USDGameReadyImportSettings.EnablePlayer, true));
             graph.AddImportSetting(new ImportSetting<bool>(USDGameReadyImportSettings.EnableCollider, true));
+            graph.AddImportSetting(new ImportSetting<bool>(USDGameReadyImportSettings.EnableAudioSource, true));
             graph.AddImportSetting(new ImportSetting<ComponentTypeRef>(USDGameReadyImportSettings.NPCComponent, new ComponentTypeRef()));
             graph.AddImportSetting(new ImportSetting<ComponentTypeRef>(USDGameReadyImportSettings.PlayerComponent, new ComponentTypeRef()));
 
@@ -142,6 +180,9 @@ namespace USDGameReady.Editor
 
             graph.AddSettingEdge(new SettingEdge(USDGameReadyImportSettings.EnableCollider,
                 createColliderNode, nameof(CreateColliderNode.Input.enabled)));
+
+            graph.AddSettingEdge(new SettingEdge(USDGameReadyImportSettings.EnableAudioSource,
+                createAudioSourceNode, nameof(CreateAudioSourceNode.Input.enabled)));
 
             System.IO.Directory.CreateDirectory(k_OutputDir);
             AssetDatabase.CreateAsset(graph, k_OutputGraphPath);
