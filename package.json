@@ -1,0 +1,22 @@
+{
+  "name": "com.usdgameready",
+  "version": "0.1.0",
+  "displayName": "USDGameReady",
+  "description": "Custom USD importer graph nodes for game-ready setup: auto-attach NavMeshAgent to NPC prims and Colliders (Box/Sphere/Capsule/Mesh) based on USD custom attributes.",
+  "unity": "6000.0",
+  "dependencies": {
+    "com.unity.importer.usd": "1.0.0-pre.2"
+  },
+  "keywords": [
+    "usd",
+    "openusd",
+    "importer",
+    "gamedev",
+    "navmesh",
+    "collider"
+  ],
+  "author": {
+    "name": "GRstory"
+  },
+  "license": "MIT"
+}
