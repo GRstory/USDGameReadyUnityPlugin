@@ -37,6 +37,8 @@ namespace USDGameReady.Editor
             var createPlayerNode      = new CreatePlayerControllerNode();
             var filterColliderNode    = new FilterColliderPrimsNode();
             var createColliderNode    = new CreateColliderNode();
+            var filterRigidbodyNode   = new FilterRigidbodyPrimsNode();
+            var createRigidbodyNode   = new CreateRigidbodyNode();
             var filterAudioSourceNode = new FilterAudioSourcePrimsNode();
             var createAudioSourceNode = new CreateAudioSourceNode();
 
@@ -74,9 +76,12 @@ namespace USDGameReady.Editor
             graph.AddNode(createPlayerNode);
             graph.AddNode(filterColliderNode);
             graph.AddNode(createColliderNode);
+            graph.AddNode(filterRigidbodyNode);
+            graph.AddNode(createRigidbodyNode);
             graph.AddNode(filterAudioSourceNode);
             graph.AddNode(createAudioSourceNode);
 
+            // ─── NPC chain ────────────────────────────────────────────────
             graph.AddEdge(new Edge(
                 stageOpenNode,  nameof(UsdStageOpenNode.Output.stage),
                 filterNPCNode,  nameof(FilterNPCPrimsNode.Input.stage)));
@@ -93,7 +98,7 @@ namespace USDGameReady.Editor
                 filterColliderNode, nameof(FilterColliderPrimsNode.Output.colliderSizes),
                 createAgentNode,    nameof(CreateNavMeshAgentNode.Input.colliderSizes)));
 
-            // NavMeshAgent → Player chain
+            // ─── Player chain (NPC 다음) ───────────────────────────────────
             graph.AddEdge(new Edge(
                 createAgentNode,  nameof(CreateNavMeshAgentNode.Output.gameObjects),
                 createPlayerNode, nameof(CreatePlayerControllerNode.Input.gameObjects)));
@@ -118,7 +123,7 @@ namespace USDGameReady.Editor
                 filterColliderNode, nameof(FilterColliderPrimsNode.Output.colliderSizes),
                 createPlayerNode,   nameof(CreatePlayerControllerNode.Input.colliderSizes)));
 
-            // Player → Collider chain
+            // ─── Collider chain (Player 다음) ─────────────────────────────
             graph.AddEdge(new Edge(
                 createPlayerNode,   nameof(CreatePlayerControllerNode.Output.gameObjects),
                 createColliderNode, nameof(CreateColliderNode.Input.gameObjects)));
@@ -140,12 +145,61 @@ namespace USDGameReady.Editor
                 createColliderNode, nameof(CreateColliderNode.Input.triggerPaths)));
 
             graph.AddEdge(new Edge(
+                filterColliderNode, nameof(FilterColliderPrimsNode.Output.colliderApproximations),
+                createColliderNode, nameof(CreateColliderNode.Input.colliderApproximations)));
+
+            graph.AddEdge(new Edge(
+                filterColliderNode, nameof(FilterColliderPrimsNode.Output.capsuleAxes),
+                createColliderNode, nameof(CreateColliderNode.Input.capsuleAxes)));
+
+            graph.AddEdge(new Edge(
                 createPlayerNode,   nameof(CreatePlayerControllerNode.Output.characterControllerPaths),
                 createColliderNode, nameof(CreateColliderNode.Input.characterControllerPaths)));
 
-            // Collider → AudioSource → BuildHierarchy
+            // ─── Rigidbody chain (Collider 다음) ──────────────────────────
             graph.AddEdge(new Edge(
-                createColliderNode,    nameof(CreateColliderNode.Output.gameObjects),
+                createColliderNode,  nameof(CreateColliderNode.Output.gameObjects),
+                createRigidbodyNode, nameof(CreateRigidbodyNode.Input.gameObjects)));
+
+            graph.AddEdge(new Edge(
+                stageOpenNode,       nameof(UsdStageOpenNode.Output.stage),
+                filterRigidbodyNode, nameof(FilterRigidbodyPrimsNode.Input.stage)));
+
+            graph.AddEdge(new Edge(
+                filterRigidbodyNode, nameof(FilterRigidbodyPrimsNode.Output.rigidbodyPaths),
+                createRigidbodyNode, nameof(CreateRigidbodyNode.Input.rigidbodyPaths)));
+
+            graph.AddEdge(new Edge(
+                filterRigidbodyNode, nameof(FilterRigidbodyPrimsNode.Output.masses),
+                createRigidbodyNode, nameof(CreateRigidbodyNode.Input.masses)));
+
+            graph.AddEdge(new Edge(
+                filterRigidbodyNode, nameof(FilterRigidbodyPrimsNode.Output.kinematicPaths),
+                createRigidbodyNode, nameof(CreateRigidbodyNode.Input.kinematicPaths)));
+
+            graph.AddEdge(new Edge(
+                filterRigidbodyNode, nameof(FilterRigidbodyPrimsNode.Output.linearVelocities),
+                createRigidbodyNode, nameof(CreateRigidbodyNode.Input.linearVelocities)));
+
+            graph.AddEdge(new Edge(
+                filterRigidbodyNode, nameof(FilterRigidbodyPrimsNode.Output.angularVelocities),
+                createRigidbodyNode, nameof(CreateRigidbodyNode.Input.angularVelocities)));
+
+            graph.AddEdge(new Edge(
+                filterRigidbodyNode, nameof(FilterRigidbodyPrimsNode.Output.centerOfMass),
+                createRigidbodyNode, nameof(CreateRigidbodyNode.Input.centerOfMass)));
+
+            graph.AddEdge(new Edge(
+                filterRigidbodyNode, nameof(FilterRigidbodyPrimsNode.Output.useGravityFalsePaths),
+                createRigidbodyNode, nameof(CreateRigidbodyNode.Input.useGravityFalsePaths)));
+
+            graph.AddEdge(new Edge(
+                createPlayerNode,    nameof(CreatePlayerControllerNode.Output.characterControllerPaths),
+                createRigidbodyNode, nameof(CreateRigidbodyNode.Input.characterControllerPaths)));
+
+            // ─── AudioSource chain (Rigidbody 다음) ───────────────────────
+            graph.AddEdge(new Edge(
+                createRigidbodyNode,   nameof(CreateRigidbodyNode.Output.gameObjects),
                 createAudioSourceNode, nameof(CreateAudioSourceNode.Input.gameObjects)));
 
             graph.AddEdge(new Edge(
@@ -160,10 +214,11 @@ namespace USDGameReady.Editor
                 createAudioSourceNode, nameof(CreateAudioSourceNode.Output.gameObjects),
                 buildHierarchyNode,    nameof(BuildHierarchyNode.Input.gameObjects)));
 
-            // ImportSettings (Inspector에 표시됨)
+            // ─── ImportSettings (Inspector에 표시됨) ───────────────────────
             graph.AddImportSetting(new ImportSetting<bool>(USDGameReadyImportSettings.EnableNPC, true));
             graph.AddImportSetting(new ImportSetting<bool>(USDGameReadyImportSettings.EnablePlayer, true));
             graph.AddImportSetting(new ImportSetting<bool>(USDGameReadyImportSettings.EnableCollider, true));
+            graph.AddImportSetting(new ImportSetting<bool>(USDGameReadyImportSettings.EnableRigidbody, true));
             graph.AddImportSetting(new ImportSetting<bool>(USDGameReadyImportSettings.EnableAudioSource, true));
             graph.AddImportSetting(new ImportSetting<ComponentTypeRef>(USDGameReadyImportSettings.NPCComponent, new ComponentTypeRef()));
             graph.AddImportSetting(new ImportSetting<ComponentTypeRef>(USDGameReadyImportSettings.PlayerComponent, new ComponentTypeRef()));
@@ -180,6 +235,9 @@ namespace USDGameReady.Editor
 
             graph.AddSettingEdge(new SettingEdge(USDGameReadyImportSettings.EnableCollider,
                 createColliderNode, nameof(CreateColliderNode.Input.enabled)));
+
+            graph.AddSettingEdge(new SettingEdge(USDGameReadyImportSettings.EnableRigidbody,
+                createRigidbodyNode, nameof(CreateRigidbodyNode.Input.enabled)));
 
             graph.AddSettingEdge(new SettingEdge(USDGameReadyImportSettings.EnableAudioSource,
                 createAudioSourceNode, nameof(CreateAudioSourceNode.Input.enabled)));
