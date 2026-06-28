@@ -26,6 +26,7 @@ namespace USDGameReady
         {
             public Dictionary<string, string> colliderPrimPaths = new();
             public Dictionary<string, Vector3> colliderSizes = new();
+            public Dictionary<string, Vector3> colliderCenters = new();
             public HashSet<string> triggerPaths = new();
             public Dictionary<string, string> colliderApproximations = new();
             public Dictionary<string, int> capsuleAxes = new();
@@ -43,10 +44,12 @@ namespace USDGameReady
 
         static readonly TfToken k_GRHasCollider = new("gameReady:hasCollider");
         static readonly TfToken k_GRColliderSize = new("gameReady:colliderSize");
+        static readonly TfToken k_GRColliderCenter = new("gameReady:colliderCenter");
         static readonly TfToken k_GRIsTrigger = new("gameReady:isTrigger");
 
         public override void Run()
         {
+            var scale = GetMetersPerUnit(Input.stage);
             var prims = Input.stage.Traverse(Usd.UsdTraverseInstanceProxies());
 
             foreach (var prim in prims)
@@ -153,7 +156,14 @@ namespace USDGameReady
                     continue;
 
                 Output.colliderPrimPaths[path] = colliderType;
-                Output.colliderSizes[path] = size;
+                Output.colliderSizes[path] = size * scale;
+
+                var centerAttr = prim.GetAttribute(k_GRColliderCenter);
+                if (centerAttr.IsValid() && centerAttr.HasValue())
+                {
+                    var v = Vt.VtValueToGfVec3f(centerAttr.Get(UsdTimeCode.EarliestTime()));
+                    Output.colliderCenters[path] = new Vector3(v[0], v[1], v[2]) * scale;
+                }
 
                 // Trigger: UsdPhysics 코어엔 isTrigger 없음 → gameReady:isTrigger 만 사용
                 var triggerAttr = prim.GetAttribute(k_GRIsTrigger);
@@ -171,6 +181,20 @@ namespace USDGameReady
             if (!attr.IsValid() || !attr.HasValue()) return fallback;
             var s = attr.Get(UsdTimeCode.EarliestTime()).ToString();
             return float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var f) ? f : fallback;
+        }
+
+        static readonly VtValue s_FloatTemplate = new VtValue(0.0f);
+
+        static float GetMetersPerUnit(UsdStage stage)
+        {
+            try
+            {
+                var val = new VtValue();
+                if (stage.GetMetadata(UsdGeomTokens.metersPerUnit, val))
+                    return VtValue.CastToTypeOf(val, s_FloatTemplate);
+            }
+            catch { }
+            return 1f;
         }
     }
 }

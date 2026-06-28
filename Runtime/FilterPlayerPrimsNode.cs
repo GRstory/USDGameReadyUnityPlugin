@@ -22,6 +22,7 @@ namespace USDGameReady
 
         public override void Run()
         {
+            var scale = GetMetersPerUnit(Input.stage);
             var playerToken = new TfToken("gameReady:isPlayer");
             var slopeToken  = new TfToken("gameReady:slopeAngleLimit");
             var stepToken   = new TfToken("gameReady:stepHeight");
@@ -44,13 +45,27 @@ namespace USDGameReady
                 var stepAttr = prim.GetAttribute(stepToken);
                 if (stepAttr.IsValid() && stepAttr.HasValue()
                     && TryParseFloat(stepAttr.Get(UsdTimeCode.EarliestTime()).ToString(), out var step))
-                    Output.stepHeights[path] = step;
+                    Output.stepHeights[path] = step * scale;
             }
         }
 
         static bool TryParseFloat(string s, out float value)
         {
             return float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
+        }
+
+        static readonly VtValue s_FloatTemplate = new VtValue(0.0f);
+
+        static float GetMetersPerUnit(UsdStage stage)
+        {
+            try
+            {
+                var val = new VtValue();
+                if (stage.GetMetadata(UsdGeomTokens.metersPerUnit, val))
+                    return VtValue.CastToTypeOf(val, s_FloatTemplate);
+            }
+            catch { }
+            return 1f;
         }
     }
 }

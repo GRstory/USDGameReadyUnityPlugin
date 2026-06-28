@@ -1,0 +1,45 @@
+#usda 1.0
+(
+    doc = "UsdPhysics 물리 레이어 — main.usda의 prim에 물리 속성을 오버라이드로 추가"
+)
+
+over "World"
+{
+    # Boulder: Rigidbody + SphereCollider (mass=150)
+    over "Boulder" (
+        prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI", "PhysicsCollisionAPI"]
+    )
+    {
+        bool  physics:rigidBodyEnabled  = true
+        bool  physics:collisionEnabled  = true
+        float physics:mass              = 150.0
+        float3 physics:velocity         = (0, 0, 0)
+    }
+
+    # MovingPlatform: Kinematic Rigidbody + BoxCollider
+    over "MovingPlatform" (
+        prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsCollisionAPI"]
+    )
+    {
+        bool physics:rigidBodyEnabled  = true
+        bool physics:kinematicEnabled  = true
+        bool physics:collisionEnabled  = true
+    }
+
+    # Column: BoxCollider만 (Rigidbody 없음 = 완전 정적)
+    over "Column" (
+        prepend apiSchemas = ["PhysicsCollisionAPI"]
+    )
+    {
+        bool physics:collisionEnabled = true
+    }
+
+    # StaticWall: MeshCollider convexHull
+    over "StaticWall" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+    )
+    {
+        bool  physics:collisionEnabled = true
+        token physics:approximation    = "convexHull"
+    }
+}

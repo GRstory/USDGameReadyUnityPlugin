@@ -1,0 +1,104 @@
+#usda 1.0
+(
+    doc = "USDGameReady UsdPhysics sublayer 샘플 — main_physics.usda가 물리 레이어"
+    upAxis = "Y"
+    metersPerUnit = 1
+    subLayers = [
+        @./main_physics.usda@
+    ]
+)
+
+def Xform "World"
+{
+    # ─────────────────────────────────────────────────────────────────────
+    # Player (gameReady 방식 — UsdPhysics 스펙 없음)
+    #   CharacterController는 physics sublayer와 별개로 gameReady에서만 처리
+    # ─────────────────────────────────────────────────────────────────────
+    def Xform "Hero"
+    {
+        custom bool   gameReady:isPlayer       = true
+        custom float3 gameReady:colliderSize   = (0.4, 0, 1.8)
+        custom float  gameReady:slopeAngleLimit = 45.0
+        custom float  gameReady:stepHeight      = 0.3
+
+        double3 xformOp:translate = (0, 0.9, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Boulder — Sphere prim
+    #   physics sublayer가 PhysicsRigidBodyAPI + PhysicsCollisionAPI 적용
+    #   → SphereCollider + Rigidbody (mass=150)
+    # ─────────────────────────────────────────────────────────────────────
+    def Sphere "Boulder"
+    {
+        double radius = 1.0
+
+        double3 xformOp:translate = (4, 5, 7)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # MovingPlatform — Cube prim
+    #   physics sublayer가 PhysicsRigidBodyAPI (kinematic) + PhysicsCollisionAPI 적용
+    #   → BoxCollider + isKinematic Rigidbody
+    # ─────────────────────────────────────────────────────────────────────
+    def Cube "MovingPlatform"
+    {
+        double size = 2.0
+
+        double3 xformOp:translate = (-5, 2, 5)
+        float3  xformOp:scale     = (3, 0.2, 3)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Column — Capsule prim
+    #   physics sublayer가 PhysicsCollisionAPI 적용 (Rigidbody 없음 = 정적)
+    #   → CapsuleCollider, axis=Y (USD 기본 "Y")
+    # ─────────────────────────────────────────────────────────────────────
+    def Capsule "Column"
+    {
+        double radius = 0.4
+        double height = 3.0          # USD Capsule: cylinder 부분만, Unity = height + 2*radius
+        uniform token axis = "Y"
+
+        double3 xformOp:translate = (6, 1.9, -3)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # StaticWall — Mesh prim
+    #   physics sublayer가 PhysicsCollisionAPI + PhysicsMeshCollisionAPI 적용
+    #   approximation = "convexHull" → MeshCollider.convex = true
+    # ─────────────────────────────────────────────────────────────────────
+    def Mesh "StaticWall"
+    {
+        double3 xformOp:translate = (0, 2, 10)
+        float3  xformOp:scale     = (10, 4, 0.3)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Interactable Switch → Gate 제어 (gameReady 방식)
+    # ─────────────────────────────────────────────────────────────────────
+    def Xform "Switch"
+    {
+        custom bool gameReady:isInteractable = true
+        rel gameReady:interactTargets = [
+            </World/Gate>
+        ]
+
+        double3 xformOp:translate = (-3, 1.2, -4)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def Xform "Gate"
+    {
+        custom token  gameReady:hasCollider  = "Box"
+        custom float3 gameReady:colliderSize = (0.3, 4, 4)
+
+        double3 xformOp:translate = (0, 2, -8)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+}

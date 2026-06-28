@@ -39,8 +39,11 @@ namespace USDGameReady.Editor
             var createColliderNode    = new CreateColliderNode();
             var filterRigidbodyNode   = new FilterRigidbodyPrimsNode();
             var createRigidbodyNode   = new CreateRigidbodyNode();
-            var filterAudioSourceNode = new FilterAudioSourcePrimsNode();
-            var createAudioSourceNode = new CreateAudioSourceNode();
+            var filterAudioSourceNode  = new FilterAudioSourcePrimsNode();
+            var createAudioSourceNode  = new CreateAudioSourceNode();
+            var filterInteractableNode = new FilterInteractablePrimsNode();
+            var createInteractableNode = new CreateInteractableNode();
+            var setMaterialNode        = new SetMaterialNode();
 
             var buildHierarchyNode = graph.Nodes.OfType<BuildHierarchyNode>().FirstOrDefault();
             if (buildHierarchyNode == null)
@@ -80,6 +83,9 @@ namespace USDGameReady.Editor
             graph.AddNode(createRigidbodyNode);
             graph.AddNode(filterAudioSourceNode);
             graph.AddNode(createAudioSourceNode);
+            graph.AddNode(filterInteractableNode);
+            graph.AddNode(createInteractableNode);
+            graph.AddNode(setMaterialNode);
 
             // ─── NPC chain ────────────────────────────────────────────────
             graph.AddEdge(new Edge(
@@ -153,6 +159,10 @@ namespace USDGameReady.Editor
                 createColliderNode, nameof(CreateColliderNode.Input.capsuleAxes)));
 
             graph.AddEdge(new Edge(
+                filterColliderNode, nameof(FilterColliderPrimsNode.Output.colliderCenters),
+                createColliderNode, nameof(CreateColliderNode.Input.colliderCenters)));
+
+            graph.AddEdge(new Edge(
                 createPlayerNode,   nameof(CreatePlayerControllerNode.Output.characterControllerPaths),
                 createColliderNode, nameof(CreateColliderNode.Input.characterControllerPaths)));
 
@@ -210,9 +220,27 @@ namespace USDGameReady.Editor
                 filterAudioSourceNode, nameof(FilterAudioSourcePrimsNode.Output.audioSourcePaths),
                 createAudioSourceNode, nameof(CreateAudioSourceNode.Input.audioSourcePaths)));
 
+            // ─── Interactable chain (AudioSource 다음) ────────────────────
             graph.AddEdge(new Edge(
-                createAudioSourceNode, nameof(CreateAudioSourceNode.Output.gameObjects),
-                buildHierarchyNode,    nameof(BuildHierarchyNode.Input.gameObjects)));
+                createAudioSourceNode,   nameof(CreateAudioSourceNode.Output.gameObjects),
+                createInteractableNode,  nameof(CreateInteractableNode.Input.gameObjects)));
+
+            graph.AddEdge(new Edge(
+                stageOpenNode,           nameof(UsdStageOpenNode.Output.stage),
+                filterInteractableNode,  nameof(FilterInteractablePrimsNode.Input.stage)));
+
+            graph.AddEdge(new Edge(
+                filterInteractableNode,  nameof(FilterInteractablePrimsNode.Output.interactTargets),
+                createInteractableNode,  nameof(CreateInteractableNode.Input.interactTargets)));
+
+            graph.AddEdge(new Edge(
+                createInteractableNode, nameof(CreateInteractableNode.Output.gameObjects),
+                setMaterialNode,        nameof(SetMaterialNode.Input.gameObjects)));
+
+            // ─── SetMaterial chain (Interactable 다음) ────────────────────
+            graph.AddEdge(new Edge(
+                setMaterialNode,    nameof(SetMaterialNode.Output.gameObjects),
+                buildHierarchyNode, nameof(BuildHierarchyNode.Input.gameObjects)));
 
             // ─── ImportSettings (Inspector에 표시됨) ───────────────────────
             graph.AddImportSetting(new ImportSetting<bool>(USDGameReadyImportSettings.EnableNPC, true));
@@ -220,6 +248,9 @@ namespace USDGameReady.Editor
             graph.AddImportSetting(new ImportSetting<bool>(USDGameReadyImportSettings.EnableCollider, true));
             graph.AddImportSetting(new ImportSetting<bool>(USDGameReadyImportSettings.EnableRigidbody, true));
             graph.AddImportSetting(new ImportSetting<bool>(USDGameReadyImportSettings.EnableAudioSource, true));
+            graph.AddImportSetting(new ImportSetting<bool>(USDGameReadyImportSettings.EnableInteractable, true));
+            graph.AddImportSetting(new ImportSetting<bool>(USDGameReadyImportSettings.EnableMaterial, true));
+            graph.AddImportSetting(new ImportSetting<Material>(USDGameReadyImportSettings.DefaultMaterial, null));
             graph.AddImportSetting(new ImportSetting<ComponentTypeRef>(USDGameReadyImportSettings.NPCComponent, new ComponentTypeRef()));
             graph.AddImportSetting(new ImportSetting<ComponentTypeRef>(USDGameReadyImportSettings.PlayerComponent, new ComponentTypeRef()));
 
@@ -241,6 +272,14 @@ namespace USDGameReady.Editor
 
             graph.AddSettingEdge(new SettingEdge(USDGameReadyImportSettings.EnableAudioSource,
                 createAudioSourceNode, nameof(CreateAudioSourceNode.Input.enabled)));
+
+            graph.AddSettingEdge(new SettingEdge(USDGameReadyImportSettings.EnableInteractable,
+                createInteractableNode, nameof(CreateInteractableNode.Input.enabled)));
+
+            graph.AddSettingEdge(new SettingEdge(USDGameReadyImportSettings.EnableMaterial,
+                setMaterialNode, nameof(SetMaterialNode.Input.enabled)));
+            graph.AddSettingEdge(new SettingEdge(USDGameReadyImportSettings.DefaultMaterial,
+                setMaterialNode, nameof(SetMaterialNode.Input.material)));
 
             System.IO.Directory.CreateDirectory(k_OutputDir);
             AssetDatabase.CreateAsset(graph, k_OutputGraphPath);

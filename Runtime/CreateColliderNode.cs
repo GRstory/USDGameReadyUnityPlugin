@@ -12,6 +12,7 @@ namespace USDGameReady
             public Dictionary<string, GameObject> gameObjects;
             public Dictionary<string, string> colliderPrimPaths;
             public Dictionary<string, Vector3> colliderSizes;
+            public Dictionary<string, Vector3> colliderCenters;
             public HashSet<string> triggerPaths;
             public HashSet<string> characterControllerPaths;
             public Dictionary<string, string> colliderApproximations;
@@ -44,6 +45,10 @@ namespace USDGameReady
                 if (Input.colliderSizes != null && Input.colliderSizes.TryGetValue(kvp.Key, out var s))
                     explicitSize = s;
 
+                Vector3? explicitCenter = null;
+                if (Input.colliderCenters != null && Input.colliderCenters.TryGetValue(kvp.Key, out var ctr))
+                    explicitCenter = ctr;
+
                 int capsuleAxis = 1; // Unity 기본 Y
                 if (Input.capsuleAxes != null && Input.capsuleAxes.TryGetValue(kvp.Key, out var ax))
                     capsuleAxis = ax;
@@ -55,9 +60,9 @@ namespace USDGameReady
                 Collider collider = null;
                 switch (kvp.Value)
                 {
-                    case "Box":     collider = AttachBox(go, explicitSize); break;
-                    case "Sphere":  collider = AttachSphere(go, explicitSize); break;
-                    case "Capsule": collider = AttachCapsule(go, explicitSize, capsuleAxis); break;
+                    case "Box":     collider = AttachBox(go, explicitSize, explicitCenter); break;
+                    case "Sphere":  collider = AttachSphere(go, explicitSize, explicitCenter); break;
+                    case "Capsule": collider = AttachCapsule(go, explicitSize, capsuleAxis, explicitCenter); break;
                     case "Mesh":    collider = AttachMesh(go, approximation); break;
                     default:
                         Debug.LogWarning($"[USDGameReady] 알 수 없는 Collider 타입 '{kvp.Value}' (prim: {kvp.Key})");
@@ -81,39 +86,41 @@ namespace USDGameReady
             return new Bounds(Vector3.zero, Vector3.one);
         }
 
-        static BoxCollider AttachBox(GameObject go, Vector3? size)
+        static BoxCollider AttachBox(GameObject go, Vector3? size, Vector3? center)
         {
             var c = go.AddComponent<BoxCollider>();
             if (size.HasValue)
             {
                 c.size = size.Value;
+                if (center.HasValue) c.center = center.Value;
             }
             else
             {
                 var b = GetMeshBounds(go);
-                c.center = b.center;
+                c.center = center ?? b.center;
                 c.size = b.size;
             }
             return c;
         }
 
-        static SphereCollider AttachSphere(GameObject go, Vector3? size)
+        static SphereCollider AttachSphere(GameObject go, Vector3? size, Vector3? center)
         {
             var c = go.AddComponent<SphereCollider>();
             if (size.HasValue)
             {
                 c.radius = size.Value.x;
+                if (center.HasValue) c.center = center.Value;
             }
             else
             {
                 var b = GetMeshBounds(go);
-                c.center = b.center;
+                c.center = center ?? b.center;
                 c.radius = Mathf.Max(b.extents.x, b.extents.y, b.extents.z);
             }
             return c;
         }
 
-        static CapsuleCollider AttachCapsule(GameObject go, Vector3? size, int direction)
+        static CapsuleCollider AttachCapsule(GameObject go, Vector3? size, int direction, Vector3? center)
         {
             var c = go.AddComponent<CapsuleCollider>();
             c.direction = direction;
@@ -121,11 +128,12 @@ namespace USDGameReady
             {
                 c.radius = size.Value.x;
                 c.height = size.Value.z;
+                if (center.HasValue) c.center = center.Value;
             }
             else
             {
                 var b = GetMeshBounds(go);
-                c.center = b.center;
+                c.center = center ?? b.center;
                 c.radius = Mathf.Max(b.extents.x, b.extents.z);
                 c.height = b.size.y;
             }

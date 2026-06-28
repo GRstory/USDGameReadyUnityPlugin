@@ -1,0 +1,310 @@
+#usda 1.0
+(
+    doc = "USDGameReady 기본 샘플"
+    upAxis = "Y"
+    metersPerUnit = 1
+)
+
+def Xform "World"
+{
+    # ─────────────────────────────────────────────────────────────────────
+    # Player — CharacterController 자동 부착
+    # ─────────────────────────────────────────────────────────────────────
+    def Xform "Hero"
+    {
+        custom bool   gameReady:isPlayer        = true
+        custom float3 gameReady:colliderSize    = (0.4, 0, 1.8)
+        custom float  gameReady:slopeAngleLimit = 45.0
+        custom float  gameReady:stepHeight      = 0.3
+        custom bool   gameReady:hasAudioSource  = true
+
+        double3 xformOp:translate = (0, 0.9, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # NPC — NavMeshAgent 자동 부착
+    # ─────────────────────────────────────────────────────────────────────
+    def Xform "Goblin"
+    {
+        custom bool   gameReady:isNPC         = true
+        custom token  gameReady:hasCollider   = "Capsule"
+        custom float3 gameReady:colliderSize  = (0.4, 0, 1.6)
+
+        double3 xformOp:translate = (3, 0.8, 5)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # 정적 지형
+    # ─────────────────────────────────────────────────────────────────────
+    def Mesh "Floor"
+    {
+        point3f[] points = [(-0.5,-0.5,-0.5),(0.5,-0.5,-0.5),(0.5,0.5,-0.5),(-0.5,0.5,-0.5),(-0.5,-0.5,0.5),(0.5,-0.5,0.5),(0.5,0.5,0.5),(-0.5,0.5,0.5)]
+        int[] faceVertexCounts = [4,4,4,4,4,4]
+        int[] faceVertexIndices = [3,2,1,0,5,6,7,4,1,5,4,0,2,6,5,1,3,7,6,2,0,4,7,3]
+        uniform token subdivisionScheme = "none"
+        color3f[] primvars:displayColor = [(0.75, 0.75, 0.75)]
+
+        custom token  gameReady:hasCollider  = "Box"
+        custom float3 gameReady:colliderSize = (20, 0.1, 20)
+
+        double3 xformOp:translate = (0, -0.05, 0)
+        float3  xformOp:scale     = (20, 0.1, 20)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Mesh "Wall_North"
+    {
+        point3f[] points = [(-0.5,-0.5,-0.5),(0.5,-0.5,-0.5),(0.5,0.5,-0.5),(-0.5,0.5,-0.5),(-0.5,-0.5,0.5),(0.5,-0.5,0.5),(0.5,0.5,0.5),(-0.5,0.5,0.5)]
+        int[] faceVertexCounts = [4,4,4,4,4,4]
+        int[] faceVertexIndices = [3,2,1,0,5,6,7,4,1,5,4,0,2,6,5,1,3,7,6,2,0,4,7,3]
+        uniform token subdivisionScheme = "none"
+        color3f[] primvars:displayColor = [(0.60, 0.60, 0.60)]
+
+        custom token  gameReady:hasCollider  = "Box"
+        custom float3 gameReady:colliderSize = (20, 4, 0.2)
+
+        double3 xformOp:translate = (0, 2, 10)
+        float3  xformOp:scale     = (20, 4, 0.2)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Mesh "Wall_West"
+    {
+        point3f[] points = [(-0.5,-0.5,-0.5),(0.5,-0.5,-0.5),(0.5,0.5,-0.5),(-0.5,0.5,-0.5),(-0.5,-0.5,0.5),(0.5,-0.5,0.5),(0.5,0.5,0.5),(-0.5,0.5,0.5)]
+        int[] faceVertexCounts = [4,4,4,4,4,4]
+        int[] faceVertexIndices = [3,2,1,0,5,6,7,4,1,5,4,0,2,6,5,1,3,7,6,2,0,4,7,3]
+        uniform token subdivisionScheme = "none"
+        color3f[] primvars:displayColor = [(0.60, 0.60, 0.60)]
+
+        custom token  gameReady:hasCollider  = "Box"
+        custom float3 gameReady:colliderSize = (0.2, 4, 20)
+
+        double3 xformOp:translate = (-10, 2, 0)
+        float3  xformOp:scale     = (0.2, 4, 20)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # gameReady Rigidbody 오브젝트
+    # ─────────────────────────────────────────────────────────────────────
+    def Mesh "Crate"
+    {
+        point3f[] points = [(-0.5,-0.5,-0.5),(0.5,-0.5,-0.5),(0.5,0.5,-0.5),(-0.5,0.5,-0.5),(-0.5,-0.5,0.5),(0.5,-0.5,0.5),(0.5,0.5,0.5),(-0.5,0.5,0.5)]
+        int[] faceVertexCounts = [4,4,4,4,4,4]
+        int[] faceVertexIndices = [3,2,1,0,5,6,7,4,1,5,4,0,2,6,5,1,3,7,6,2,0,4,7,3]
+        uniform token subdivisionScheme = "none"
+        color3f[] primvars:displayColor = [(0.55, 0.37, 0.18)]
+
+        custom token  gameReady:hasCollider  = "Box"
+        custom float3 gameReady:colliderSize = (1, 1, 1)
+        custom bool   gameReady:hasRigidbody = true
+        custom float  gameReady:mass         = 20.0
+
+        double3 xformOp:translate = (2, 0.5, 3)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def Mesh "Barrel"
+    {
+        point3f[] points = [(-0.5,-0.5,-0.5),(0.5,-0.5,-0.5),(0.5,0.5,-0.5),(-0.5,0.5,-0.5),(-0.5,-0.5,0.5),(0.5,-0.5,0.5),(0.5,0.5,0.5),(-0.5,0.5,0.5)]
+        int[] faceVertexCounts = [4,4,4,4,4,4]
+        int[] faceVertexIndices = [3,2,1,0,5,6,7,4,1,5,4,0,2,6,5,1,3,7,6,2,0,4,7,3]
+        uniform token subdivisionScheme = "none"
+        color3f[] primvars:displayColor = [(0.30, 0.30, 0.30)]
+
+        custom token  gameReady:hasCollider  = "Capsule"
+        custom float3 gameReady:colliderSize = (0.35, 0, 0.9)
+        custom bool   gameReady:hasRigidbody = true
+        custom float  gameReady:mass         = 35.0
+
+        double3 xformOp:translate = (-2, 0.45, 3)
+        float3  xformOp:scale     = (0.7, 0.9, 0.7)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Mesh "KinematicPlatform"
+    {
+        point3f[] points = [(-0.5,-0.5,-0.5),(0.5,-0.5,-0.5),(0.5,0.5,-0.5),(-0.5,0.5,-0.5),(-0.5,-0.5,0.5),(0.5,-0.5,0.5),(0.5,0.5,0.5),(-0.5,0.5,0.5)]
+        int[] faceVertexCounts = [4,4,4,4,4,4]
+        int[] faceVertexIndices = [3,2,1,0,5,6,7,4,1,5,4,0,2,6,5,1,3,7,6,2,0,4,7,3]
+        uniform token subdivisionScheme = "none"
+        color3f[] primvars:displayColor = [(0.25, 0.35, 0.65)]
+
+        custom token  gameReady:hasCollider  = "Box"
+        custom float3 gameReady:colliderSize = (3, 0.2, 3)
+        custom bool   gameReady:hasRigidbody = true
+        custom float  gameReady:mass         = 200.0
+        custom bool   gameReady:isKinematic  = true
+
+        double3 xformOp:translate = (-5, 1, 5)
+        float3  xformOp:scale     = (3, 0.2, 3)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # UsdPhysics 방식 물리 오브젝트 (def Mesh + PhysicsCollisionAPI)
+    # ─────────────────────────────────────────────────────────────────────
+    def Mesh "Boulder" (
+        prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI", "PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+    )
+    {
+        point3f[] points = [(-0.5,-0.5,-0.5),(0.5,-0.5,-0.5),(0.5,0.5,-0.5),(-0.5,0.5,-0.5),(-0.5,-0.5,0.5),(0.5,-0.5,0.5),(0.5,0.5,0.5),(-0.5,0.5,0.5)]
+        int[] faceVertexCounts = [4,4,4,4,4,4]
+        int[] faceVertexIndices = [3,2,1,0,5,6,7,4,1,5,4,0,2,6,5,1,3,7,6,2,0,4,7,3]
+        uniform token subdivisionScheme = "none"
+        color3f[] primvars:displayColor = [(0.45, 0.38, 0.28)]
+
+        bool  physics:rigidBodyEnabled = true
+        bool  physics:collisionEnabled = true
+        float physics:mass             = 120.0
+        token physics:approximation    = "boundingSphere"
+
+        double3 xformOp:translate = (-4, 4, 6)
+        float3  xformOp:scale     = (1.6, 1.6, 1.6)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Mesh "HeavyBlock" (
+        prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI", "PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+    )
+    {
+        point3f[] points = [(-0.5,-0.5,-0.5),(0.5,-0.5,-0.5),(0.5,0.5,-0.5),(-0.5,0.5,-0.5),(-0.5,-0.5,0.5),(0.5,-0.5,0.5),(0.5,0.5,0.5),(-0.5,0.5,0.5)]
+        int[] faceVertexCounts = [4,4,4,4,4,4]
+        int[] faceVertexIndices = [3,2,1,0,5,6,7,4,1,5,4,0,2,6,5,1,3,7,6,2,0,4,7,3]
+        uniform token subdivisionScheme = "none"
+        color3f[] primvars:displayColor = [(0.38, 0.38, 0.45)]
+
+        bool   physics:rigidBodyEnabled = true
+        bool   physics:collisionEnabled = true
+        float  physics:mass             = 80.0
+        float3 physics:velocity         = (2, 0, 0)
+        token  physics:approximation    = "boundingCube"
+
+        double3 xformOp:translate = (0, 3, 4)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def Mesh "Pillar" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+    )
+    {
+        point3f[] points = [(-0.5,-0.5,-0.5),(0.5,-0.5,-0.5),(0.5,0.5,-0.5),(-0.5,0.5,-0.5),(-0.5,-0.5,0.5),(0.5,-0.5,0.5),(0.5,0.5,0.5),(-0.5,0.5,0.5)]
+        int[] faceVertexCounts = [4,4,4,4,4,4]
+        int[] faceVertexIndices = [3,2,1,0,5,6,7,4,1,5,4,0,2,6,5,1,3,7,6,2,0,4,7,3]
+        uniform token subdivisionScheme = "none"
+        color3f[] primvars:displayColor = [(0.68, 0.65, 0.60)]
+
+        bool  physics:collisionEnabled = true
+        token physics:approximation    = "convexHull"
+
+        double3 xformOp:translate = (-6, 2, 2)
+        float3  xformOp:scale     = (0.6, 4, 0.6)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    def Mesh "RockPile" (
+        prepend apiSchemas = ["PhysicsRigidBodyAPI", "PhysicsMassAPI", "PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+    )
+    {
+        point3f[] points = [(-0.5,-0.5,-0.5),(0.5,-0.5,-0.5),(0.5,0.5,-0.5),(-0.5,0.5,-0.5),(-0.5,-0.5,0.5),(0.5,-0.5,0.5),(0.5,0.5,0.5),(-0.5,0.5,0.5)]
+        int[] faceVertexCounts = [4,4,4,4,4,4]
+        int[] faceVertexIndices = [3,2,1,0,5,6,7,4,1,5,4,0,2,6,5,1,3,7,6,2,0,4,7,3]
+        uniform token subdivisionScheme = "none"
+        color3f[] primvars:displayColor = [(0.50, 0.42, 0.32)]
+
+        bool  physics:rigidBodyEnabled = true
+        bool  physics:collisionEnabled = true
+        float physics:mass             = 60.0
+        token physics:approximation    = "convexHull"
+
+        double3 xformOp:translate = (7, 0.5, 2)
+        float3  xformOp:scale     = (1.2, 0.8, 1.0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Trigger Zone — 초록색으로 구분
+    # ─────────────────────────────────────────────────────────────────────
+    def Mesh "CheckpointZone"
+    {
+        point3f[] points = [(-0.5,-0.5,-0.5),(0.5,-0.5,-0.5),(0.5,0.5,-0.5),(-0.5,0.5,-0.5),(-0.5,-0.5,0.5),(0.5,-0.5,0.5),(0.5,0.5,0.5),(-0.5,0.5,0.5)]
+        int[] faceVertexCounts = [4,4,4,4,4,4]
+        int[] faceVertexIndices = [3,2,1,0,5,6,7,4,1,5,4,0,2,6,5,1,3,7,6,2,0,4,7,3]
+        uniform token subdivisionScheme = "none"
+        color3f[] primvars:displayColor = [(0.20, 0.85, 0.30)]
+
+        custom token  gameReady:hasCollider  = "Box"
+        custom float3 gameReady:colliderSize = (3, 3, 3)
+        custom bool   gameReady:isTrigger    = true
+
+        double3 xformOp:translate = (8, 1.5, 8)
+        float3  xformOp:scale     = (3, 3, 3)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Interactable
+    # ─────────────────────────────────────────────────────────────────────
+    def Xform "Switch"
+    {
+        custom bool gameReady:isInteractable = true
+        rel gameReady:interactTargets = [
+            </World/Lights/CeilingLight_A>,
+            </World/Lights/CeilingLight_B>
+        ]
+
+        double3 xformOp:translate = (-3, 1.2, -4)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def Mesh "Chest"
+    {
+        point3f[] points = [(-0.5,-0.5,-0.5),(0.5,-0.5,-0.5),(0.5,0.5,-0.5),(-0.5,0.5,-0.5),(-0.5,-0.5,0.5),(0.5,-0.5,0.5),(0.5,0.5,0.5),(-0.5,0.5,0.5)]
+        int[] faceVertexCounts = [4,4,4,4,4,4]
+        int[] faceVertexIndices = [3,2,1,0,5,6,7,4,1,5,4,0,2,6,5,1,3,7,6,2,0,4,7,3]
+        uniform token subdivisionScheme = "none"
+        color3f[] primvars:displayColor = [(0.80, 0.62, 0.12)]
+
+        custom bool   gameReady:isInteractable = true
+        custom token  gameReady:hasCollider    = "Box"
+        custom float3 gameReady:colliderSize   = (0.8, 0.6, 0.6)
+        rel gameReady:interactTargets = [
+            </World/SpawnPoints/ItemSpawn>
+        ]
+
+        double3 xformOp:translate = (5, 0.3, -3)
+        float3  xformOp:scale     = (0.8, 0.6, 0.6)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:scale"]
+    }
+
+    # ─────────────────────────────────────────────────────────────────────
+    # interactTarget 대상 오브젝트
+    # ─────────────────────────────────────────────────────────────────────
+    def Xform "Lights"
+    {
+        def Xform "CeilingLight_A"
+        {
+            custom bool gameReady:hasAudioSource = true
+
+            double3 xformOp:translate = (-3, 4, -4)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+
+        def Xform "CeilingLight_B"
+        {
+            double3 xformOp:translate = (1, 4, -4)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+    }
+
+    def Xform "SpawnPoints"
+    {
+        def Xform "ItemSpawn"
+        {
+            double3 xformOp:translate = (5, 1, -3)
+            uniform token[] xformOpOrder = ["xformOp:translate"]
+        }
+    }
+}
